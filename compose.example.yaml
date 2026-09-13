@@ -1,0 +1,25 @@
+services:
+  spotify-mcp:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MCP_LISTEN_ADDR: 0.0.0.0:8080
+      SPOTIFY_CALLBACK_BIND: 0.0.0.0
+      SPOTIFY_CALLBACK_PORT: 8888
+    ports:
+      - "${MCP_PUBLISH_ADDR:-127.0.0.1}:${MCP_PUBLISH_PORT:-8765}:8080"
+      - "127.0.0.1:${SPOTIFY_CALLBACK_PORT:-8888}:8888"
+    volumes:
+      - spotify-mcp-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  spotify-mcp-data:

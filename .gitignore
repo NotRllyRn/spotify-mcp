@@ -1,28 +1,10 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-*.egg
-dist/
-build/
-.venv/
-
-# Type checking / linting
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
-
-# IDE
+.env
+.env.local
+/bin/
+coverage.out
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Environment
-.env
-.env.local
-
-# OS
 .DS_Store
 Thumbs.db
