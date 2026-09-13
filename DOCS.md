@@ -28,13 +28,23 @@ The default endpoint is `http://127.0.0.1:8765/mcp`. The container runs as UID 6
 
 ## First authorization
 
-Run this once before using Spotify tools:
+The dedicated authentication service publishes the callback port only while authorization is running:
 
 ```bash
-docker compose --env-file .env -f compose.example.yaml run --rm --service-ports spotify-mcp auth
+docker compose --env-file .env -f compose.example.yaml run --rm --service-ports spotify-mcp-auth
 ```
 
 Open the printed URL and approve access. Spotify redirects the browser to the loopback-only callback port. The command stores only the refresh token and original authorization time in the named volume.
+
+### Remote Docker host
+
+When Docker runs on another machine, forward the callback port from your laptop:
+
+```bash
+ssh -N -L 8888:127.0.0.1:8888 user@your-server
+```
+
+Keep the tunnel open, run the authentication command on the server, and open its printed URL on your laptop. The browser connects to laptop port 8888, SSH forwards the callback to the remote host, and Docker forwards it to the temporary authentication container. Port 8888 is never publicly exposed, and the regular server can remain running.
 
 ## MCP client configuration
 
