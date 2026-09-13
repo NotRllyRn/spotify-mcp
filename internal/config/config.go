@@ -29,8 +29,9 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 	redirectURI := env("SPOTIFY_REDIRECT_URI", defaultRedirectURI)
-	if _, err := url.ParseRequestURI(redirectURI); err != nil {
-		return Config{}, errors.New("SPOTIFY_REDIRECT_URI must be a valid URI")
+	redirect, err := url.ParseRequestURI(redirectURI)
+	if err != nil || (redirect.Scheme != "http" && redirect.Scheme != "https") || redirect.Host == "" {
+		return Config{}, errors.New("SPOTIFY_REDIRECT_URI must be an absolute HTTP URI")
 	}
 	level := new(slog.LevelVar)
 	if err := level.UnmarshalText([]byte(env("LOG_LEVEL", "info"))); err != nil {
