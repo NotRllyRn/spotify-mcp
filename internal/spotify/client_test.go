@@ -122,6 +122,36 @@ func TestDoRejectsLongRateLimit(t *testing.T) {
 	}
 }
 
+func TestLocalValidation(t *testing.T) {
+	client, _, closeServer := testClient(t, func(http.ResponseWriter, *http.Request) {
+		t.Fatal("validation made a Spotify request")
+	})
+	defer closeServer()
+	negative := -1
+	tests := []struct {
+		name string
+		call func() error
+	}{
+		{"search limit", func() error { _, err := client.SearchTracks(context.Background(), "x", 11, 0); return err }},
+		{"volume", func() error { return client.SetVolume(context.Background(), 101, "") }},
+		{"seek", func() error { return client.Seek(context.Background(), -1, "") }},
+		{"repeat", func() error { return client.SetRepeat(context.Background(), "all", "") }},
+		{"play sources", func() error {
+			return client.Play(context.Background(), "", "spotify:album:x", []string{"spotify:track:x"}, 0, nil)
+		}},
+		{"play position", func() error { return client.Play(context.Background(), "", "", nil, 0, &negative) }},
+		{"playlist empty", func() error { _, err := client.AddPlaylistItems(context.Background(), "id", nil, nil); return err }},
+		{"library empty", func() error { _, err := client.SaveToLibrary(context.Background(), nil); return err }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.call(); err == nil {
+				t.Fatal("call succeeded, want validation error")
+			}
+		})
+	}
+}
+
 func TestCurrentMutationPathsAndChunks(t *testing.T) {
 	var paths []string
 	var bodies []map[string]any
