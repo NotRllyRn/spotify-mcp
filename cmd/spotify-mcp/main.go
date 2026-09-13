@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/NotRllyRn/spotify-mcp/internal/auth"
 	"github.com/NotRllyRn/spotify-mcp/internal/config"
 	"github.com/NotRllyRn/spotify-mcp/internal/server"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -43,14 +44,38 @@ func run() error {
 	case "serve":
 		return serve(cfg)
 	case "auth":
-		return errors.New("auth is not implemented")
+		return authorize(cfg)
 	default:
 		return fmt.Errorf("unknown command %q (use serve, auth, or version)", command)
 	}
 }
 
+func sharedHTTPClient() *http.Client {
+	return &http.Client{Transport: &http.Transport{MaxIdleConns: 20, MaxIdleConnsPerHost: 10, IdleConnTimeout: 90 * time.Second}}
+}
+
+func authorize(cfg config.Config) error {
+	if err := cfg.ValidateAuth(); err != nil {
+		return err
+	}
+	store := auth.Store{Path: cfg.TokenPath}
+	if err := store.CheckWritable(); err != nil {
+		return err
+	}
+	manager := auth.NewTokenManager(sharedHTTPClient(), store, cfg.SpotifyClientID, auth.SpotifyTokenURL)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return auth.Authorize(ctx, manager, auth.AuthorizationConfig{
+		ClientID: cfg.SpotifyClientID, RedirectURI: cfg.SpotifyRedirectURI,
+		Bind: cfg.SpotifyCallbackBind, Port: cfg.SpotifyCallbackPort,
+	})
+}
+
 func serve(cfg config.Config) error {
 	if err := cfg.ValidateServe(); err != nil {
+		return err
+	}
+	if err := (auth.Store{Path: cfg.TokenPath}).CheckWritable(); err != nil {
 		return err
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
