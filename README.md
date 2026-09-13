@@ -9,7 +9,7 @@ A small self-hosted MCP server for controlling Spotify.
 2. Copy and edit the environment file:
    `cp example.env .env`
 3. Authorize Spotify:
-   `docker compose --env-file .env -f compose.example.yaml run --rm --service-ports spotify-mcp auth`
+   `docker compose --env-file .env -f compose.example.yaml run --rm --service-ports spotify-mcp-auth`
 4. Start:
    `docker compose --env-file .env -f compose.example.yaml up -d`
 
