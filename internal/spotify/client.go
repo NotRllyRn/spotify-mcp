@@ -45,12 +45,13 @@ func (c *Client) Do(ctx context.Context, method, path string, query url.Values, 
 	}
 	ref := &url.URL{Path: strings.TrimPrefix(path, "/"), RawQuery: query.Encode()}
 	endpoint := c.base.ResolveReference(ref).String()
-	refreshed, rateRetried := false, false
+	authRetried, forceRefresh, rateRetried := false, false, false
 	for {
-		token, err := c.auth.Token(ctx, refreshed)
+		token, err := c.auth.Token(ctx, forceRefresh)
 		if err != nil {
 			return err
 		}
+		forceRefresh = false
 		req, err := http.NewRequestWithContext(ctx, method, endpoint, bytes.NewReader(payload))
 		if err != nil {
 			return fmt.Errorf("create Spotify request: %w", err)
@@ -68,8 +69,8 @@ func (c *Client) Do(ctx context.Context, method, path string, query url.Values, 
 		if readErr != nil {
 			return fmt.Errorf("read Spotify response: %w", readErr)
 		}
-		if response.StatusCode == http.StatusUnauthorized && !refreshed {
-			refreshed = true
+		if response.StatusCode == http.StatusUnauthorized && !authRetried {
+			authRetried, forceRefresh = true, true
 			continue
 		}
 		if response.StatusCode == http.StatusTooManyRequests {

@@ -69,6 +69,15 @@ func TestTokenRefreshRotation(t *testing.T) {
 	}
 }
 
+func TestExpiredAuthorizationRequiresAuthorization(t *testing.T) {
+	store := Store{Path: filepath.Join(t.TempDir(), "token.json")}
+	_ = store.Save(State{RefreshToken: "expired", AuthorizedAt: time.Now().AddDate(0, -6, -1)})
+	manager := NewTokenManager(http.DefaultClient, store, "client", "http://unused")
+	if _, err := manager.Token(context.Background(), false); err != ErrReauthorizationRequired {
+		t.Fatalf("error = %v, want %v", err, ErrReauthorizationRequired)
+	}
+}
+
 func TestInvalidGrantRequiresAuthorization(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)

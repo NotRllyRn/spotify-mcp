@@ -49,6 +49,9 @@ func (m *TokenManager) Token(ctx context.Context, force bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if time.Now().After(state.AuthorizedAt.AddDate(0, 6, 0)) {
+		return "", ErrReauthorizationRequired
+	}
 	values := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {state.RefreshToken},
