@@ -24,15 +24,24 @@ type Artist struct {
 }
 
 type Album struct {
-	ID           string            `json:"id"`
-	URI          string            `json:"uri"`
-	Name         string            `json:"name"`
-	AlbumType    string            `json:"album_type,omitempty"`
-	ReleaseDate  string            `json:"release_date,omitempty"`
-	Artists      []Artist          `json:"artists,omitempty"`
-	Images       []Image           `json:"images,omitempty"`
-	ExternalURLs map[string]string `json:"external_urls,omitempty"`
-	Items        *Paging[Track]    `json:"items,omitempty"`
+	ID           string              `json:"id"`
+	URI          string              `json:"uri"`
+	Name         string              `json:"name"`
+	AlbumType    string              `json:"album_type,omitempty"`
+	ReleaseDate  string              `json:"release_date,omitempty"`
+	Artists      []Artist            `json:"artists,omitempty"`
+	Images       []Image             `json:"images,omitempty"`
+	ExternalURLs map[string]string   `json:"external_urls,omitempty"`
+	Items        *Paging[AlbumTrack] `json:"items,omitempty"`
+}
+
+type AlbumTrack struct {
+	ID         string   `json:"id"`
+	URI        string   `json:"uri"`
+	Name       string   `json:"name"`
+	Artists    []Artist `json:"artists,omitempty"`
+	DurationMS int      `json:"duration_ms,omitempty"`
+	Explicit   bool     `json:"explicit"`
 }
 
 type Track struct {

@@ -14,6 +14,7 @@ import (
 	"github.com/NotRllyRn/spotify-mcp/internal/auth"
 	"github.com/NotRllyRn/spotify-mcp/internal/config"
 	"github.com/NotRllyRn/spotify-mcp/internal/server"
+	"github.com/NotRllyRn/spotify-mcp/internal/spotify"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -81,7 +82,14 @@ func serve(cfg config.Config) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	httpClient := sharedHTTPClient()
+	manager := auth.NewTokenManager(httpClient, auth.Store{Path: cfg.TokenPath}, cfg.SpotifyClientID, auth.SpotifyTokenURL)
+	spotifyClient, err := spotify.NewClient(httpClient, manager, spotify.APIBaseURL)
+	if err != nil {
+		return err
+	}
 	mcpServer := mcp.NewServer(&mcp.Implementation{Name: "spotify-mcp", Version: version}, nil)
+	server.RegisterTools(mcpServer, spotifyClient)
 	httpServer := server.NewHTTP(cfg.MCPListenAddr, cfg.MCPAuthToken, cfg.MCPAllowedOrigins, mcpServer)
 	errCh := make(chan error, 1)
 	go func() {
