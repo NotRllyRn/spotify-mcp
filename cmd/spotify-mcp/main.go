@@ -57,7 +57,7 @@ func serve(cfg config.Config) error {
 	defer stop()
 
 	mcpServer := mcp.NewServer(&mcp.Implementation{Name: "spotify-mcp", Version: version}, nil)
-	httpServer := server.NewHTTP(cfg.MCPListenAddr, mcpServer)
+	httpServer := server.NewHTTP(cfg.MCPListenAddr, cfg.MCPAuthToken, cfg.MCPAllowedOrigins, mcpServer)
 	errCh := make(chan error, 1)
 	go func() {
 		slog.Info("server listening", "address", cfg.MCPListenAddr)
